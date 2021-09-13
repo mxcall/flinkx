@@ -1,0 +1,63 @@
+{
+    "job": {
+        "content": [
+            {
+                "reader": {
+                    "parameter": {
+                        "url": "mongodb://mongoadmin:secret@192.168.168.12:27017/test?authSource=admin",
+                        "fetchSize": 100,
+                        "database": "test",
+                        "collectionName": "flinkc",
+                        "filter": "{}",
+                        "column": [
+                            {
+                                "name": "_id",
+                                "type": "objectid"
+                            },
+                            {
+                                "name": "flinkBson",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "table": {
+                        "tableName": "sourceTable"
+                    },
+                    "name": "mongodbreader"
+                },
+                "writer": {
+                    "parameter": {
+                        "column": [
+                            {
+                                "name": "_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "content",
+                                "type": "timestamp"
+                            },
+                            {
+                                "name": "flinkBson",
+                                "type": "string"
+                            }
+                        ],
+                        "print": true
+                    },
+                    "table": {
+                        "tableName": "sinkTable"
+                    },
+                    "name": "streamwriter"
+                },
+                "transformer": {
+                    "transformSql": "select _id, NOW(), flinkBson from sourceTable "
+                }
+            }
+        ],
+        "setting": {
+            "speed": {
+                "channel": 1,
+                "bytes": 0
+            }
+        }
+    }
+}

@@ -98,6 +98,8 @@ public class MongodbColumnConverter
             Object field = document.get(fieldNames[pos]);
             if (field instanceof ObjectId) {
                 field = field.toString();
+            } else if ("flinkBson".equalsIgnoreCase(fieldNames[pos])) {
+                field = document.toJson();
             }
             data.addField((AbstractBaseColumn) toInternalConverters[pos].deserialize(field));
         }

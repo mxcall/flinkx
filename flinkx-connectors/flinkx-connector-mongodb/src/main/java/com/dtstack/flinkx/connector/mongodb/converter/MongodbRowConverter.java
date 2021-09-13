@@ -100,6 +100,8 @@ public final class MongodbRowConverter
             Object field = document.get(fieldNames[pos]);
             if (field instanceof ObjectId) {
                 field = field.toString();
+            } else if ("flinkBson".equalsIgnoreCase(fieldNames[pos])) {
+                field = document.toJson();
             }
             genericRowData.setField(pos, toInternalConverters[pos].deserialize(field));
         }

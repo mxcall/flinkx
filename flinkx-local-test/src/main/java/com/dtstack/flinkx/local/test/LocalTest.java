@@ -47,11 +47,15 @@ public class LocalTest {
         //        confProperties.setProperty("state.checkpoints.dir", "file:///ck");
         String userDir = System.getProperty("user.dir");
 
-        String jobPath =
-                userDir + "/flinkx-local-test/src/main/demo/json/socket/socket_stream.json";
-        String flinkxDistDir = userDir + "/flinkx-dist";
-        String s = "";
+//        String jobPath =
+//                userDir + "/flinkx-local-test/src/main/demo/json/socket/socket_stream.json";
 
+        String jobPath = "D:\\04_workspace\\1work_java\\workspace_002\\flinkx\\flinkx\\flinkx-examples\\json\\socket\\mongo_test.json";
+
+//        String flinkxDistDir = userDir + "/flinkx-dist";
+        String flinkxDistDir = "D:\\04_workspace\\1work_java\\workspace_002\\flinkx\\flinkx\\flinkx-dist";
+        String s = "";
+        //bin/flinkx -mode local -jobType sync -job /mnt/sdb/ws/flinkx-executer/flinkx-demo/demo-mongo2.json -flinkxDistDir /mnt/sdb/ws/flinkx-executer/flink-1.12.2/flinkx-dist
         // 任务配置参数
         List<String> argsList = new ArrayList<>();
         argsList.add("-mode");
@@ -61,13 +65,18 @@ public class LocalTest {
             argsList.add("-jobType");
             argsList.add("sync");
             argsList.add("-job");
+            //argsList.add(jobPath);
             argsList.add(content);
+            argsList.add("-flinkxDistDir");
+            argsList.add(flinkxDistDir);
             //            argsList.add("-flinkConfDir");
             //            argsList.add("/opt/dtstack/flink-1.12.2/conf/");
             //            argsList.add("-flinkConfDir");
             //            argsList.add(flinkxPluginPath);
             argsList.add("-confProp");
             argsList.add(GsonUtil.GSON.toJson(confProperties));
+
+
             if (StringUtils.isNotBlank(s)) {
                 argsList.add("-s");
                 argsList.add(s);
