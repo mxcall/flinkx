@@ -24,6 +24,7 @@ import com.dtstack.flinkx.converter.AbstractRowConverter;
 import com.dtstack.flinkx.converter.IDeserializationConverter;
 import com.dtstack.flinkx.converter.ISerializationConverter;
 import com.dtstack.flinkx.element.AbstractBaseColumn;
+import com.dtstack.flinkx.element.ColumnRowData;
 import com.dtstack.flinkx.element.column.BigDecimalColumn;
 import com.dtstack.flinkx.element.column.BooleanColumn;
 import com.dtstack.flinkx.element.column.BytesColumn;
@@ -71,21 +72,25 @@ public class HdfsParquetColumnConverter
             if (left > 0 && right > 0) {
                 type = type.substring(0, left);
             }
-            toInternalConverters[i] =
-                    wrapIntoNullableInternalConverter(createInternalConverter(type));
-            toExternalConverters[i] =
-                    wrapIntoNullableExternalConverter(createExternalConverter(type), type);
+            toInternalConverters.add(
+                    wrapIntoNullableInternalConverter(createInternalConverter(type)));
+            toExternalConverters.add(
+                    wrapIntoNullableExternalConverter(createExternalConverter(type), type));
         }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public RowData toInternal(RowData input) throws Exception {
-        GenericRowData row = new GenericRowData(input.getArity());
+        ColumnRowData row = new ColumnRowData(input.getArity());
         if (input instanceof GenericRowData) {
             GenericRowData genericRowData = (GenericRowData) input;
             for (int i = 0; i < input.getArity(); i++) {
-                row.setField(i, toInternalConverters[i].deserialize(genericRowData.getField(i)));
+                row.addField(
+                        (AbstractBaseColumn)
+                                toInternalConverters
+                                        .get(i)
+                                        .deserialize(genericRowData.getField(i)));
             }
         } else {
             throw new FlinkxRuntimeException(
@@ -100,7 +105,7 @@ public class HdfsParquetColumnConverter
     @SuppressWarnings("unchecked")
     public Group toExternal(RowData rowData, Group group) throws Exception {
         for (int index = 0; index < rowData.getArity(); index++) {
-            toExternalConverters[index].serialize(rowData, index, group);
+            toExternalConverters.get(index).serialize(rowData, index, group);
         }
         return group;
     }

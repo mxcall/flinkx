@@ -20,6 +20,7 @@ package com.dtstack.flinkx.connector.solr.converter;
 
 import com.dtstack.flinkx.converter.AbstractRowConverter;
 import com.dtstack.flinkx.converter.IDeserializationConverter;
+import com.dtstack.flinkx.element.AbstractBaseColumn;
 import com.dtstack.flinkx.element.ColumnRowData;
 import com.dtstack.flinkx.element.column.BigDecimalColumn;
 import com.dtstack.flinkx.element.column.BooleanColumn;
@@ -27,7 +28,6 @@ import com.dtstack.flinkx.element.column.BytesColumn;
 import com.dtstack.flinkx.element.column.StringColumn;
 import com.dtstack.flinkx.element.column.TimestampColumn;
 
-import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
@@ -40,6 +40,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -50,7 +51,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  */
 public class SolrColumnConverter
         extends AbstractRowConverter<SolrDocument, SolrDocument, SolrInputDocument, LogicalType> {
-    protected SolrSerializationConverter[] toExternalConverters;
+    protected List<SolrSerializationConverter> toExternalConverters;
     protected String[] fieldNames;
 
     public SolrColumnConverter(RowType rowType, String[] fieldNames) {
@@ -61,37 +62,40 @@ public class SolrColumnConverter
                 rowType.getFields().stream()
                         .map(RowType.RowField::getType)
                         .toArray(LogicalType[]::new);
-        this.toInternalConverters = new IDeserializationConverter[rowType.getFieldCount()];
-        this.toExternalConverters = new SolrSerializationConverter[rowType.getFieldCount()];
+        this.toInternalConverters = new ArrayList<>();
+        this.toExternalConverters = new ArrayList<>();
         for (int i = 0; i < rowType.getFieldCount(); i++) {
-            toInternalConverters[i] =
+            toInternalConverters.add(
                     wrapIntoNullableInternalConverter(
-                            createInternalConverter(rowType.getTypeAt(i)));
-            toExternalConverters[i] =
+                            createInternalConverter(rowType.getTypeAt(i))));
+            toExternalConverters.add(
                     wrapIntoNullableSolrExternalConverter(
-                            createSolrExternalConverter(fieldTypes[i]));
+                            createSolrExternalConverter(fieldTypes[i])));
         }
     }
 
     @Override
     public RowData toInternal(SolrDocument input) throws Exception {
-        GenericRowData genericRowData = new GenericRowData(rowType.getFieldCount());
+        ColumnRowData columnRowData = new ColumnRowData(toInternalConverters.size());
         for (int pos = 0; pos < rowType.getFieldCount(); pos++) {
             Object field = input.getFieldValue(fieldNames[pos]);
             // when Solr collection is schemaless, it will return a ArrayList.
             if (field instanceof ArrayList) {
                 field = ((ArrayList) field).get(0);
             }
-            genericRowData.setField(pos, toInternalConverters[pos].deserialize(field));
+            columnRowData.addField(
+                    (AbstractBaseColumn) toInternalConverters.get(pos).deserialize(field));
         }
-        return genericRowData;
+        return columnRowData;
     }
 
     @Override
     public SolrInputDocument toExternal(RowData rowData, SolrInputDocument solrInputDocument)
             throws Exception {
         for (int pos = 0; pos < rowData.getArity(); pos++) {
-            toExternalConverters[pos].serialize(rowData, pos, fieldNames[pos], solrInputDocument);
+            toExternalConverters
+                    .get(pos)
+                    .serialize(rowData, pos, fieldNames[pos], solrInputDocument);
         }
         return solrInputDocument;
     }

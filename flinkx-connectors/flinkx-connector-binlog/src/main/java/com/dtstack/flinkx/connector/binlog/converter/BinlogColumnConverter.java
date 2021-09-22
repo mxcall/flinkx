@@ -32,15 +32,16 @@ import com.dtstack.flinkx.element.column.StringColumn;
 import com.dtstack.flinkx.element.column.TimestampColumn;
 import com.dtstack.flinkx.util.DateUtil;
 
+import org.apache.flink.calcite.shaded.com.google.common.collect.Maps;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.RowKind;
 
 import com.alibaba.otter.canal.protocol.CanalEntry;
-import com.google.common.collect.Maps;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -67,7 +68,7 @@ public class BinlogColumnConverter extends AbstractCDCRowConverter<BinlogEventRo
         String schema = binlogEventRow.getSchema();
         String table = binlogEventRow.getTable();
         String key = schema + ConstantValue.POINT_SYMBOL + table;
-        IDeserializationConverter[] converters = super.cdcConverterCacheMap.get(key);
+        List<IDeserializationConverter> converters = super.cdcConverterCacheMap.get(key);
         for (CanalEntry.RowData rowData : rowChange.getRowDatasList()) {
             if (converters == null) {
                 List<CanalEntry.Column> list = rowData.getBeforeColumnsList();
@@ -75,9 +76,10 @@ public class BinlogColumnConverter extends AbstractCDCRowConverter<BinlogEventRo
                     list = rowData.getAfterColumnsList();
                 }
                 converters =
-                        list.stream()
-                                .map(x -> createInternalConverter(x.getMysqlType()))
-                                .toArray(IDeserializationConverter[]::new);
+                        Arrays.asList(
+                                list.stream()
+                                        .map(x -> createInternalConverter(x.getMysqlType()))
+                                        .toArray(IDeserializationConverter[]::new));
                 cdcConverterCacheMap.put(key, converters);
             }
 
@@ -162,7 +164,7 @@ public class BinlogColumnConverter extends AbstractCDCRowConverter<BinlogEventRo
      * @param after
      */
     private void parseColumnList(
-            IDeserializationConverter<String, AbstractBaseColumn>[] converters,
+            List<IDeserializationConverter> converters,
             List<CanalEntry.Column> entryColumnList,
             List<AbstractBaseColumn> columnList,
             List<String> headerList,
@@ -171,7 +173,8 @@ public class BinlogColumnConverter extends AbstractCDCRowConverter<BinlogEventRo
         for (int i = 0; i < entryColumnList.size(); i++) {
             CanalEntry.Column entryColumn = entryColumnList.get(i);
             if (!entryColumn.getIsNull()) {
-                AbstractBaseColumn column = converters[i].deserialize(entryColumn.getValue());
+                AbstractBaseColumn column =
+                        (AbstractBaseColumn) converters.get(i).deserialize(entryColumn.getValue());
                 columnList.add(column);
             } else {
                 columnList.add(new NullColumn());

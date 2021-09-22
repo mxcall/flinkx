@@ -30,7 +30,6 @@ import com.dtstack.flinkx.source.SourceFactory;
 import com.dtstack.flinkx.sql.parser.SqlParser;
 import com.dtstack.flinkx.throwable.FlinkxRuntimeException;
 import com.dtstack.flinkx.util.DataSyncFactoryUtil;
-import com.dtstack.flinkx.util.ExceptionUtil;
 import com.dtstack.flinkx.util.ExecuteProcessHelper;
 import com.dtstack.flinkx.util.FactoryHelper;
 import com.dtstack.flinkx.util.PluginUtil;
@@ -135,7 +134,7 @@ public class Main {
                 }
             }
         } catch (Exception e) {
-            LOG.error(ExceptionUtil.getErrorMessage(e));
+            throw new FlinkxRuntimeException(e);
         } finally {
             FactoryUtil.getFactoryHelperThreadLocal().remove();
             TableFactoryService.getFactoryHelperThreadLocal().remove();

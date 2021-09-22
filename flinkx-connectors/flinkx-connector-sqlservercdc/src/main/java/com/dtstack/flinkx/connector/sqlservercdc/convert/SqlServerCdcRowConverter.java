@@ -22,6 +22,7 @@ import com.dtstack.flinkx.connector.sqlservercdc.entity.SqlServerCdcEventRow;
 import com.dtstack.flinkx.converter.AbstractCDCRowConverter;
 import com.dtstack.flinkx.converter.IDeserializationConverter;
 
+import org.apache.flink.calcite.shaded.com.google.common.collect.Maps;
 import org.apache.flink.formats.json.TimestampFormat;
 import org.apache.flink.table.api.TableException;
 import org.apache.flink.table.data.DecimalData;
@@ -32,8 +33,6 @@ import org.apache.flink.table.types.logical.DecimalType;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.types.RowKind;
-
-import com.google.common.collect.Maps;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -46,6 +45,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -63,9 +63,9 @@ public class SqlServerCdcRowConverter
     public SqlServerCdcRowConverter(RowType rowType, TimestampFormat timestampFormat) {
         super.fieldNameList = rowType.getFieldNames();
         this.timestampFormat = timestampFormat;
-        super.converters = new IDeserializationConverter[rowType.getFieldCount()];
+        super.converters = new ArrayList<>();
         for (int i = 0; i < rowType.getFieldCount(); i++) {
-            super.converters[i] = createInternalConverter(rowType.getTypeAt(i));
+            super.converters.add(createInternalConverter(rowType.getTypeAt(i)));
         }
     }
 

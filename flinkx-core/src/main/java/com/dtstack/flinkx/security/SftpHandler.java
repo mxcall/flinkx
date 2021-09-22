@@ -64,16 +64,7 @@ public class SftpHandler {
 
     public static SftpHandler getInstanceWithRetry(Map<String, String> sftpConfig) {
         try {
-            return RetryUtil.executeWithRetry(
-                    new Callable<SftpHandler>() {
-                        @Override
-                        public SftpHandler call() throws Exception {
-                            return getInstance(sftpConfig);
-                        }
-                    },
-                    3,
-                    1000,
-                    false);
+            return RetryUtil.executeWithRetry(() -> getInstance(sftpConfig), 3, 1000, false);
         } catch (Exception e) {
             throw new RuntimeException("获取SFTPHandler出错", e);
         }

@@ -33,16 +33,16 @@ import com.dtstack.flinkx.element.column.StringColumn;
 import com.dtstack.flinkx.element.column.TimestampColumn;
 import com.dtstack.flinkx.util.StringUtil;
 
+import org.apache.flink.calcite.shaded.com.google.common.collect.Maps;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.RowKind;
-
-import com.google.common.collect.Maps;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -72,14 +72,15 @@ public class SqlServerCdcColumnConverter
         String schema = sqlServerCdcEventRow.getSchema();
         String table = sqlServerCdcEventRow.getTable();
         String key = schema + ConstantValue.POINT_SYMBOL + table;
-        IDeserializationConverter[] converters = super.cdcConverterCacheMap.get(key);
+        List<IDeserializationConverter> converters = super.cdcConverterCacheMap.get(key);
 
         if (converters == null) {
             List<String> columnTypes = sqlServerCdcEventRow.getColumnTypes();
             converters =
-                    columnTypes.stream()
-                            .map(x -> createInternalConverter(x))
-                            .toArray(IDeserializationConverter[]::new);
+                    Arrays.asList(
+                            columnTypes.stream()
+                                    .map(x -> createInternalConverter(x))
+                                    .toArray(IDeserializationConverter[]::new));
             cdcConverterCacheMap.put(key, converters);
         }
 
@@ -222,7 +223,7 @@ public class SqlServerCdcColumnConverter
      * @param after
      */
     private void parseColumnList(
-            IDeserializationConverter<Object, AbstractBaseColumn>[] converters,
+            List<IDeserializationConverter> converters,
             Object[] data,
             List<String> columnsNames,
             List<AbstractBaseColumn> columnList,
@@ -232,7 +233,8 @@ public class SqlServerCdcColumnConverter
         for (int i = 0; i < data.length; i++) {
             headerList.add(after + columnsNames.get(i));
             if (data[i] != null) {
-                AbstractBaseColumn column = converters[i].deserialize(data[i]);
+                AbstractBaseColumn column =
+                        (AbstractBaseColumn) converters.get(i).deserialize(data[i]);
                 columnList.add(column);
             } else {
                 columnList.add(null);

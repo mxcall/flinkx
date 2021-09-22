@@ -44,6 +44,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.List;
 
 /** Base class for all converters that convert between JDBC object and Flink internal object. */
@@ -58,12 +59,12 @@ public class JdbcColumnConverter
     public JdbcColumnConverter(RowType rowType, FlinkxCommonConf commonConf) {
         super(rowType, commonConf);
         for (int i = 0; i < rowType.getFieldCount(); i++) {
-            toInternalConverters[i] =
+            toInternalConverters.add(
                     wrapIntoNullableInternalConverter(
-                            createInternalConverter(rowType.getTypeAt(i)));
-            toExternalConverters[i] =
+                            createInternalConverter(rowType.getTypeAt(i))));
+            toExternalConverters.add(
                     wrapIntoNullableExternalConverter(
-                            createExternalConverter(fieldTypes[i]), fieldTypes[i]);
+                            createExternalConverter(fieldTypes[i]), fieldTypes[i]));
         }
     }
 
@@ -92,7 +93,7 @@ public class JdbcColumnConverter
                 Object field = resultSet.getObject(converterIndex + 1);
                 baseColumn =
                         (AbstractBaseColumn)
-                                toInternalConverters[converterIndex].deserialize(field);
+                                toInternalConverters.get(converterIndex).deserialize(field);
                 converterIndex++;
             }
             result.addField(assembleFieldProps(fieldConf, baseColumn));
@@ -104,7 +105,7 @@ public class JdbcColumnConverter
     public FieldNamedPreparedStatement toExternal(
             RowData rowData, FieldNamedPreparedStatement statement) throws Exception {
         for (int index = 0; index < rowData.getArity(); index++) {
-            toExternalConverters[index].serialize(rowData, index, statement);
+            toExternalConverters.get(index).serialize(rowData, index, statement);
         }
         return statement;
     }
@@ -135,7 +136,15 @@ public class JdbcColumnConverter
             case TIME_WITHOUT_TIME_ZONE:
             case TIMESTAMP_WITH_TIME_ZONE:
             case TIMESTAMP_WITHOUT_TIME_ZONE:
-                return val -> new TimestampColumn(DateUtil.getTimestampFromStr(val.toString()));
+                return (IDeserializationConverter<Object, AbstractBaseColumn>)
+                        val -> {
+                            Timestamp timestamp = DateUtil.convertToTimestamp(val.toString());
+                            if (timestamp != null) {
+                                return new TimestampColumn(timestamp);
+                            }
+                            return new TimestampColumn(
+                                    DateUtil.getTimestampFromStr(val.toString()));
+                        };
             case BINARY:
             case VARBINARY:
                 return val -> new BytesColumn((byte[]) val);
