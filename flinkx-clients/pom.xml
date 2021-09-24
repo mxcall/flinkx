@@ -105,6 +105,22 @@
 			<artifactId>flink-json</artifactId>
 			<version>${flink.version}</version>
 		</dependency>
+		<!-- add because flinkx-connectors-hdfs -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-parquet_${scala.binary.version}</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-orc_${scala.binary.version}</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-json</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
 
     </dependencies>
 
