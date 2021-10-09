@@ -136,10 +136,10 @@
 					</gitDescribe>
 				</configuration>
 			</plugin>
-			<plugin>
+			<!--<plugin>
 				<groupId>com.diffplug.spotless</groupId>
 				<artifactId>spotless-maven-plugin</artifactId>
-			</plugin>
+			</plugin>-->
 		</plugins>
 
 		<pluginManagement>
@@ -205,7 +205,7 @@
 					</configuration>
 				</plugin>
 
-				<plugin>
+				<!--<plugin>
 					<groupId>com.diffplug.spotless</groupId>
 					<artifactId>spotless-maven-plugin</artifactId>
 					<version>2.4.2</version>
@@ -216,7 +216,7 @@
 								<style>AOSP</style>
 							</googleJavaFormat>
 
-							<!-- \# refers to the static imports -->
+							&lt;!&ndash; \# refers to the static imports &ndash;&gt;
 							<importOrder>
 								<order>com.dtstack,org.apache.flink,org.apache.flink.shaded,,javax,java,scala,\#</order>
 							</importOrder>
@@ -233,7 +233,7 @@
 							</goals>
 						</execution>
 					</executions>
-				</plugin>
+				</plugin>-->
 			</plugins>
 		</pluginManagement>
 	</build>
