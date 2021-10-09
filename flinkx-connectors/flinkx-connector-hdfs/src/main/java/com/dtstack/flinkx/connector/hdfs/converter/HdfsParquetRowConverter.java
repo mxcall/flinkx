@@ -189,8 +189,24 @@ public class HdfsParquetRowConverter
                 return (rowData, index, group) ->
                         group.add(columnNameList.get(index), rowData.getInt(index));
             case BIGINT:
+                /*
                 return (rowData, index, group) ->
                         group.add(columnNameList.get(index), rowData.getLong(index));
+                */
+
+                return (rowData, index, group) -> {
+                    GenericRowData rowDataImpl = (GenericRowData) rowData;
+                    if (rowDataImpl.getField(index) instanceof Long) {
+                        group.add(columnNameList.get(index), rowData.getLong(index));
+                    } else {
+                        TimestampData timestampData =
+                                rowData.getTimestamp(index, 6);
+
+                        group.add(columnNameList.get(index), timestampData.toTimestamp().getTime());
+                    }
+
+                };
+
             case DATE:
                 return (rowData, index, group) -> {
                     Date date = Date.valueOf(LocalDate.ofEpochDay(rowData.getInt(index)));
