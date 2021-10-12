@@ -40,6 +40,8 @@ import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.io.api.Binary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -54,6 +56,8 @@ import java.util.List;
  */
 public class HdfsParquetRowConverter
         extends AbstractRowConverter<RowData, RowData, Group, LogicalType> {
+
+    protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private List<String> columnNameList;
 
@@ -196,13 +200,12 @@ public class HdfsParquetRowConverter
 
                 return (rowData, index, group) -> {
                     GenericRowData rowDataImpl = (GenericRowData) rowData;
-                    if (rowDataImpl.getField(index) instanceof Long) {
-                        group.add(columnNameList.get(index), rowData.getLong(index));
-                    } else {
+                    if (rowDataImpl.getField(index) instanceof org.apache.flink.table.data.TimestampData){
                         TimestampData timestampData =
                                 rowData.getTimestamp(index, 6);
-
                         group.add(columnNameList.get(index), timestampData.toTimestamp().getTime());
+                    }else{
+                        group.add(columnNameList.get(index), rowData.getLong(index));
                     }
 
                 };
