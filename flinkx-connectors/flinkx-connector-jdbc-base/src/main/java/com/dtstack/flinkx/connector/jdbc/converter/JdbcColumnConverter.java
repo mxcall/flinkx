@@ -47,6 +47,7 @@ import java.sql.ResultSet;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
 
 /** Base class for all converters that convert between JDBC object and Flink internal object. */
 public class JdbcColumnConverter
@@ -95,7 +96,9 @@ public class JdbcColumnConverter
                 // 目前仅有 BIGINT UNSIGNED 类型会被解析成 java.math.BigInteger类型, 因此默认将BigInteger转化java.lang.Long
                 // 来源请参考: https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-type-conversions.html
                 if (field instanceof java.math.BigInteger) {
-                    field = ((BigInteger) field).longValue();
+                    field = Optional.ofNullable(field).map(e->((BigInteger) e).longValue()).orElse(null);
+                } else if (field instanceof java.lang.Boolean) {
+                    field = Optional.ofNullable(field).map(e->((Boolean) e).booleanValue()? 1: 0).orElse(null);
                 }
 
                 baseColumn =
