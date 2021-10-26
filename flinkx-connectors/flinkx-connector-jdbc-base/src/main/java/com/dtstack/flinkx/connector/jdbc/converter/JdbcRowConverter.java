@@ -97,7 +97,7 @@ public class JdbcRowConverter
             if (field instanceof java.math.BigInteger) {
                 field = Optional.ofNullable(field).map(e->((BigInteger) e).longValue()).orElse(null);
             } else if (field instanceof java.lang.Boolean) {
-                field = Optional.ofNullable(field).map(e->((Boolean) e).booleanValue()? 1L: 0L).orElse(null);
+                field = Optional.ofNullable(field).map(e->((Boolean) e).booleanValue()? 1: 0).orElse(null);
             }
 
             genericRowData.setField(pos, toInternalConverters.get(pos).deserialize(field));
@@ -138,12 +138,29 @@ public class JdbcRowConverter
             case BIGINT:
                 return val -> val;
             case TINYINT:
-                return val -> ((Integer) val).byteValue();
+                return val -> {
+                    if (val instanceof Integer) {
+                        return ((Integer) val).byteValue();
+                    } else if (val instanceof Long) {
+                        return val;
+                    } else {
+                        return null;
+                    }
+                };
             case SMALLINT:
                 // Converter for small type that casts value to int and then return short value,
                 // since
                 // JDBC 1.0 use int type for small values.
-                return val -> val instanceof Integer ? ((Integer) val).shortValue() : val;
+
+                return val -> {
+                    if (val instanceof Integer) {
+                        return ((Integer) val).shortValue();
+                    } else if (val instanceof Long) {
+                        return val;
+                    } else {
+                        return null;
+                    }
+                };
             case DECIMAL:
                 final int precision = ((DecimalType) type).getPrecision();
                 final int scale = ((DecimalType) type).getScale();
