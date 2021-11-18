@@ -201,10 +201,14 @@ public class HdfsParquetRowConverter
                 return (rowData, index, group) -> {
                     GenericRowData rowDataImpl = (GenericRowData) rowData;
                     if (rowDataImpl.getField(index) instanceof org.apache.flink.table.data.TimestampData){
-                        TimestampData timestampData =
-                                rowData.getTimestamp(index, 6);
+
+                        TimestampData timestampData = rowData.getTimestamp(index, 6);
                         group.add(columnNameList.get(index), timestampData.toTimestamp().getTime());
-                    }else{
+
+                    } else if (rowDataImpl.getField(index) instanceof java.lang.Integer){ // date
+                        group.add(columnNameList.get(index), DateWritable.daysToMillis(rowData.getInt(index)));
+
+                    } else {
                         group.add(columnNameList.get(index), rowData.getLong(index));
                     }
 
