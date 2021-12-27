@@ -20,6 +20,10 @@ package com.dtstack.flinkx.connector.elasticsearch7.utils;
 
 import com.dtstack.flinkx.connector.elasticsearch7.conf.ElasticsearchConf;
 
+import com.dtstack.flinkx.connector.elasticsearch7.table.lookup.ElasticsearchAllTableFunction;
+
+import org.apache.commons.lang3.StringUtils;
+
 import org.apache.flink.table.api.ValidationException;
 
 import org.apache.http.HttpHost;
@@ -30,6 +34,8 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -44,7 +50,7 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
  * @create: 2021/06/27 17:32
  */
 public class ElasticsearchUtil {
-
+    public static Logger LOG = LoggerFactory.getLogger(ElasticsearchAllTableFunction.class);
     /**
      * @param elasticsearchConf
      * @return
@@ -59,7 +65,9 @@ public class ElasticsearchUtil {
                                 .setConnectTimeout(elasticsearchConf.getConnectTimeout())
                                 .setConnectionRequestTimeout(elasticsearchConf.getRequestTimeout())
                                 .setSocketTimeout(elasticsearchConf.getSocketTimeout()));
-        if (elasticsearchConf.isAuthMesh()) {
+        LOG.info("SHOW_PWD_1: {}={}, isAuthMesh={}", elasticsearchConf.getUsername(), elasticsearchConf.getPassword(), elasticsearchConf.isAuthMesh());
+        if (StringUtils.isNotBlank(elasticsearchConf.getUsername())) {
+            LOG.info("SHOW_PWD_2: {}={}, isAuthMesh={}", elasticsearchConf.getUsername(), elasticsearchConf.getPassword(), elasticsearchConf.isAuthMesh());
             // 进行用户和密码认证
             final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(

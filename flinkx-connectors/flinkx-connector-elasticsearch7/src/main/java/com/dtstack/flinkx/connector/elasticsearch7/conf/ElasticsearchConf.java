@@ -20,6 +20,8 @@ package com.dtstack.flinkx.connector.elasticsearch7.conf;
 
 import com.dtstack.flinkx.conf.FlinkxCommonConf;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -46,7 +48,7 @@ public class ElasticsearchConf extends FlinkxCommonConf implements Serializable 
     private List<String> ids;
 
     /** is open basic auth. */
-    private boolean authMesh = false;
+    private boolean authMesh = true;
 
     /** basic auth : username */
     private String username;
